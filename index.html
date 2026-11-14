@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ماشین‌حساب لات</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;800&display=swap">
+<style>
+:root{
+  --bg:#f1f4f6;--card:#ffffff;--ink:#14202b;--mute:#5d6b78;--line:#d9e0e6;
+  --accent:#0f6e8c;--buy:#1c8a57;--sell:#c4402f;--warn:#9a6a00;--field:#f7f9fa;
+  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){--bg:#0e1318;--card:#161d25;--ink:#e6ebf0;--mute:#93a1ae;--line:#26313c;--accent:#4fb3d1;--buy:#3ecf8e;--sell:#ff6b57;--warn:#e2b64a;--field:#0f151b;color-scheme:dark}
+}
+:root[data-theme="dark"]{--bg:#0e1318;--card:#161d25;--ink:#e6ebf0;--mute:#93a1ae;--line:#26313c;--accent:#4fb3d1;--buy:#3ecf8e;--sell:#ff6b57;--warn:#e2b64a;--field:#0f151b;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Vazirmatn",Tahoma,system-ui,sans-serif;line-height:1.7}
+main{max-width:440px;margin:0 auto;padding:18px 14px 40px}
+h1{font-size:1.25rem;font-weight:800;margin:6px 4px 14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+label{display:block;font-size:.85rem;color:var(--mute);margin-bottom:4px}
+.f{margin-bottom:12px}
+input,select{width:100%;font:inherit;font-size:1rem;color:var(--ink);background:var(--field);border:1px solid var(--line);border-radius:10px;padding:10px 12px;direction:ltr;text-align:left}
+select{direction:rtl;text-align:right}
+input:focus,select:focus,summary:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.hint{font-size:.78rem;color:var(--mute);margin-top:4px}
+.slbox{background:var(--field);border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:flex;justify-content:space-between;gap:10px;direction:rtl;font-variant-numeric:tabular-nums}
+.slbox span{white-space:nowrap}.slbox b{direction:ltr;unicode-bidi:isolate}
+.buy{color:var(--buy)}.sell{color:var(--sell)}
+.lot{display:flex;align-items:baseline;gap:10px;margin:4px 0 2px}
+.lot b{font-size:3.4rem;font-weight:800;line-height:1.1;direction:ltr;font-variant-numeric:tabular-nums}
+.lot span,.cap{color:var(--mute)}
+dl{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;margin:14px 0 0;font-size:.92rem}
+dt{color:var(--mute)}dd{margin:0;direction:ltr;text-align:left;font-variant-numeric:tabular-nums}
+.msg{color:var(--warn);font-size:.9rem}
+.empty{color:var(--mute)}
+details{margin-top:2px}summary{cursor:pointer;color:var(--mute);font-size:.85rem}
+details .f{margin:10px 0 0}
+</style>
+</head>
+<body>
+<main>
+<h1>ماشین‌حساب لات</h1>
+
+<section class="card">
+  <div class="f"><label for="sym">نماد</label>
+    <select id="sym">
+      <option value="XAUUSD">طلا (XAUUSD)</option>
+      <option value="EURUSD">EURUSD</option><option value="GBPUSD">GBPUSD</option>
+      <option value="AUDUSD">AUDUSD</option><option value="NZDUSD">NZDUSD</option>
+      <option value="USDJPY">USDJPY</option><option value="USDCHF">USDCHF</option><option value="USDCAD">USDCAD</option>
+      <option value="US30">داوجونز (US30)</option>
+    </select></div>
+  <div class="row">
+    <div class="f"><label for="bal">سرمایه (دلار)</label><input id="bal" inputmode="decimal" autocomplete="off"></div>
+    <div class="f"><label for="risk">ریسک (درصد)</label><input id="risk" inputmode="decimal" autocomplete="off"></div>
+  </div>
+  <div class="f"><label for="entry">قیمت ورود</label><input id="entry" inputmode="decimal" autocomplete="off"></div>
+  <div class="f"><label for="pts">فاصله از قیمت ورود (پوینت)</label><input id="pts" inputmode="decimal" autocomplete="off"><div class="hint" id="ptHint"></div></div>
+  <div class="f"><label>حد ضرر محاسبه‌شده</label><div class="slbox" id="slOut"><span class="empty">—</span></div></div>
+  <details><summary>تنظیم اندازه پوینت (اختیاری)</summary>
+    <div class="f"><label for="pt">اندازه هر پوینت در قیمت</label><input id="pt" inputmode="decimal" autocomplete="off">
+    <div class="hint">با تعداد رقم اعشار نماد در بروکر شما فرق میکند. اگر نتیجه با متاتریدر نمیخواند این را تنظیم کنید.</div></div>
+  </details>
+</section>
+
+<section class="card" id="out" aria-live="polite"><div class="empty">سرمایه، ریسک، قیمت ورود و فاصله را وارد کنید.</div></section>
+</main>
+
+<script>
+const S={
+  XAUUSD:{c:100,q:'usd',pt:0.01},
+  EURUSD:{c:100000,q:'usd',pt:0.00001},GBPUSD:{c:100000,q:'usd',pt:0.00001},
+  AUDUSD:{c:100000,q:'usd',pt:0.00001},NZDUSD:{c:100000,q:'usd',pt:0.00001},
+  USDJPY:{c:100000,q:'base',pt:0.001},USDCHF:{c:100000,q:'base',pt:0.00001},USDCAD:{c:100000,q:'base',pt:0.00001},
+  US30:{c:1,q:'usd',pt:1}
+};
+const STEP=0.01;
+const $=id=>document.getElementById(id);
+const ids=['sym','bal','risk','entry','pts','pt'];
+const FA='۰۱۲۳۴۵۶۷۸۹',AR='٠١٢٣٤٥٦٧٨٩';
+function num(v,money){
+  let s=String(v||'').replace(/[۰-۹]/g,d=>FA.indexOf(d)).replace(/[٠-٩]/g,d=>AR.indexOf(d)).replace(/[٬\s]/g,'').replace(/٫/g,'.');
+  s=money?s.replace(/,/g,''):s.replace(/,/g,'.');
+  const n=parseFloat(s);return isFinite(n)?n:NaN;
+}
+const fmt=(n,d=2)=>n.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+function save(){try{const o={};ids.forEach(i=>o[i]=$(i).value);localStorage.setItem('lotcalc2',JSON.stringify(o))}catch(e){}}
+function load(){try{const o=JSON.parse(localStorage.getItem('lotcalc2')||'{}');ids.forEach(i=>{if(o[i]!=null)$(i).value=o[i]})}catch(e){}}
+function ptSize(){const v=num($('pt').value);return v>0?v:S[$('sym').value].pt}
+function hint(){const z=ptSize();$('ptHint').textContent='هر پوینت = '+z.toFixed(8).replace(/0+$/,'').replace(/\.$/,'')+' در قیمت';}
+function calc(){
+  const p=S[$('sym').value],out=$('out'),sl=$('slOut');
+  sl.innerHTML='<span class="empty">—</span>';
+  const bal=num($('bal').value,true),risk=num($('risk').value),en=num($('entry').value),pts=num($('pts').value);
+  if(!(en>0&&pts>0)){out.innerHTML='<div class="empty">سرمایه، ریسک، قیمت ورود و فاصله را وارد کنید.</div>';return}
+  const z=ptSize(),dec=Math.min(8,Math.max(0,Math.round(-Math.log10(z)))),dist=pts*z;
+  const slB=en-dist,slS=en+dist;
+  sl.innerHTML='<span class="buy">خرید: <b>'+(slB>0?slB.toFixed(dec):'—')+'</b></span><span class="sell">فروش: <b>'+slS.toFixed(dec)+'</b></span>';
+  if(!(bal>0&&risk>0)){out.innerHTML='<div class="empty">سرمایه و ریسک را وارد کنید.</div>';return}
+  const toUSD=p.q==='usd'?1:1/en;
+  const lossLot=dist*p.c*toUSD,riskMoney=bal*risk/100,raw=riskMoney/lossLot;
+  const lot=Math.floor(raw/STEP+1e-9)*STEP;
+  if(lot<STEP){
+    out.innerHTML='<div class="msg">با این ریسک و فاصله، لات کمتر از ۰٫۰۱ میشود. حداقل لات حدود $'+fmt(STEP*lossLot)+' ریسک دارد.</div>';return;
+  }
+  const real=lot*lossLot;
+  out.innerHTML='<div class="cap">لات محاسبه‌شده</div><div class="lot"><b>'+lot.toFixed(2)+'</b><span>لات</span></div>'
+   +'<dl><dt>مبلغ ریسک</dt><dd>$'+fmt(riskMoney)+'</dd>'
+   +'<dt>ریسک واقعی با این لات</dt><dd>$'+fmt(real)+' ('+fmt(real/bal*100)+'%)</dd>'
+   +'<dt>فاصله در قیمت</dt><dd>'+dist.toFixed(dec)+'</dd></dl>';
+}
+load();
+if(!S[$('sym').value])$('sym').value='XAUUSD';
+if(!($('pt').value>0))$('pt').value=S[$('sym').value].pt;
+$('sym').addEventListener('change',()=>{$('pt').value=S[$('sym').value].pt;hint();save();calc()});
+ids.forEach(i=>{if(i!=='sym')$(i).addEventListener('input',()=>{hint();save();calc()})});
+hint();calc();
+</script>
+</body>
+</html>
